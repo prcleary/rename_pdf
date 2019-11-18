@@ -12,7 +12,7 @@
 #'
 #' @examples
 #' rename_pdf(tag = '_pdfrn')  # Renames PDF files in current directory, tagging renamed files with "_pdfrn"
-rename_pdf <- function(filepath = choose.dir(),
+rename_pdf <- function(filepath = rstudioapi::selectDirectory(),
                        n_words = 20,
                        tag = '',
                        exclude = '',
