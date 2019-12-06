@@ -17,7 +17,8 @@ rename_pdf <- function(filepath = rstudioapi::selectDirectory(),
                        tag = '',
                        exclude = '',
                        opw = '',
-                       upw = '') {
+                       upw = '',
+                       random = TRUE) {
   # Function to remove punctuation, newlines, trailing whitespace
   sanitise_filename <- function(x) {
     x <- gsub('[[:punct:] ]+', ' ', x)
@@ -28,6 +29,7 @@ rename_pdf <- function(filepath = rstudioapi::selectDirectory(),
   message('\nRenaming PDFs...\n')
   original_filenames <-
     list.files(filepath, pattern = '\\.pdf$|\\.PDF$', full.names = TRUE)
+  if (random) original_filenames <- original_filenames[sample(length(original_filenames))]
   if (!exclude %in% '')
     original_filenames <- original_filenames[!grepl(exclude, original_filenames)]
   for (o in original_filenames) {
