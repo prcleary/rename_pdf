@@ -35,7 +35,6 @@ rename_pdf <- function(filepath = rstudioapi::selectDirectory(),
   for (o in original_filenames) {
     o_dirname <- dirname(o)
     o_basename <- basename(o)
-    cat('Original filename: ', o_basename, '\n')
     o_title <- pdftools::pdf_info(o, opw, upw)$keys$Title
     if (is.null(o_title)) {
       raw_text <- paste0(pdftools::pdf_text(o, opw, upw), collapse = ' ')
@@ -48,6 +47,7 @@ rename_pdf <- function(filepath = rstudioapi::selectDirectory(),
     } else {
       o_title_sane <- sanitise_filename(o_title)
     }
+    cat('Original filename: ', o_basename, '\n')
     cat('Suggested title: ', o_title_sane, '\n')
     decision <- readline('Change to suggested title? (y/n): ')
     if (decision %in% 'y') {
