@@ -17,7 +17,8 @@ rename_pdf <- function(filepath = rstudioapi::selectDirectory(),
                        tag = '',
                        exclude = '',
                        opw = '',
-                       upw = '') {
+                       upw = '',
+                       random = TRUE) {
   # Function to remove punctuation, newlines, trailing whitespace
   sanitise_filename <- function(x) {
     x <- gsub('[[:punct:] ]+', ' ', x)
@@ -28,12 +29,12 @@ rename_pdf <- function(filepath = rstudioapi::selectDirectory(),
   message('\nRenaming PDFs...\n')
   original_filenames <-
     list.files(filepath, pattern = '\\.pdf$|\\.PDF$', full.names = TRUE)
+  if (random) original_filenames <- original_filenames[sample(length(original_filenames))]
   if (!exclude %in% '')
     original_filenames <- original_filenames[!grepl(exclude, original_filenames)]
   for (o in original_filenames) {
     o_dirname <- dirname(o)
     o_basename <- basename(o)
-    cat('Original filename: ', o_basename, '\n')
     o_title <- pdftools::pdf_info(o, opw, upw)$keys$Title
     if (is.null(o_title)) {
       raw_text <- paste0(pdftools::pdf_text(o, opw, upw), collapse = ' ')
@@ -46,8 +47,9 @@ rename_pdf <- function(filepath = rstudioapi::selectDirectory(),
     } else {
       o_title_sane <- sanitise_filename(o_title)
     }
+    cat('Original filename: ', o_basename, '\n')
     cat('Alternative title: ', o_title_sane, '\n')
-    decision <- readline('Change to alternative title? (y/n): ')
+    decision <- readline('Change to alternative title? (y/N): ')
     if (decision %in% 'y') {
       # TODO truncate if too long
       o_newname <-
