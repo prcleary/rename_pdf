@@ -1,7 +1,7 @@
 #' Rename PDFs (Interactively)
 #'
 #' @param filepath Directory containing PDF files (default is to ask)
-#' @param n_words Number of words of text to use as suggested title when no title in PDF metadata (default of 20); NB: risk of exceeding maximum file name length causing error
+#' @param n_words Number of words of text to use as alternative title when no title in PDF metadata (default of 20); NB: risk of exceeding maximum file name length causing error
 #' @param tag Optional text tag appended to file name to identify renamed files (e.g. to use in exclude if function is re-run)
 #' @param exclude Optional PDF filenames containing this text will be ignored
 #' @param opw Optional string with owner password if encrypted PDF
@@ -46,8 +46,8 @@ rename_pdf <- function(filepath = rstudioapi::selectDirectory(),
     } else {
       o_title_sane <- sanitise_filename(o_title)
     }
-    cat('Suggested title: ', o_title_sane, '\n')
-    decision <- readline('Change to suggested title? (y/n): ')
+    cat('Alternative title: ', o_title_sane, '\n')
+    decision <- readline('Change to alternative title? (y/n): ')
     if (decision %in% 'y') {
       # TODO truncate if too long
       o_newname <-
