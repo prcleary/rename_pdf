@@ -18,7 +18,8 @@ rename_pdf <- function(filepath = rstudioapi::selectDirectory(),
                        exclude = '',
                        opw = '',
                        upw = '',
-                       random = TRUE) {
+                       random = TRUE,
+                       pattern = '\\.pdf$|\\.PDF$') {
   # Function to remove punctuation, newlines, trailing whitespace
   sanitise_filename <- function(x) {
     x <- gsub('[[:punct:] ]+', ' ', x)
@@ -28,39 +29,69 @@ rename_pdf <- function(filepath = rstudioapi::selectDirectory(),
   }
   message('\nRenaming PDFs...\n')
   original_filenames <-
-    list.files(filepath, pattern = '\\.pdf$|\\.PDF$', full.names = TRUE)
-  if (random) original_filenames <- original_filenames[sample(length(original_filenames))]
+    list.files(filepath, pattern = pattern, full.names = TRUE)
+  if (random) { 
+    original_filenames <- original_filenames[sample(length(original_filenames))]
+  } else {
+    original_filenames <- original_filenames[order(nchar(original_filenames))]
+  }
   if (!exclude %in% '')
-    original_filenames <- original_filenames[!grepl(exclude, original_filenames)]
+    original_filenames <-
+    original_filenames[!grepl(exclude, original_filenames)]
   for (o in original_filenames) {
     o_dirname <- dirname(o)
     o_basename <- basename(o)
     o_title <- pdftools::pdf_info(o, opw, upw)$keys$Title
+    raw_text <-
+      paste0(pdftools::pdf_text(o, opw, upw), collapse = ' ')
+    raw_text_sane <- sanitise_filename(raw_text)
     if (is.null(o_title)) {
-      raw_text <- paste0(pdftools::pdf_text(o, opw, upw), collapse = ' ')
-      raw_text_sane <- sanitise_filename(raw_text)
       o_title_sane <- stringr::word(raw_text_sane, 1, n_words)
-    } else  if (o_title %in% '') {
-      raw_text <- paste0(pdftools::pdf_text(o, opw, upw), collapse = ' ')
-      raw_text_sane <- sanitise_filename(raw_text)
+    } else if (o_title %in% '') {
       o_title_sane <- stringr::word(raw_text_sane, 1, n_words)
     } else {
       o_title_sane <- sanitise_filename(o_title)
     }
+    o_title_sane <-
+      stringr::str_replace_all(
+        o_title_sane,
+        c(
+          'Microsoft Word\\s*' = '',
+          'PowerPoint Presentation\\s*' = '',
+          '\\s+doc\\s*' = '',
+          '\\s+docx\\s*' = '',
+          '\\s+pdf\\s*' = '',
+          '\\s+dvi\\s*' = '',
+          '\\s+indd\\s*' = '',
+          '\\s+doi\\s*' = '',
+          '\\s+crossm\\s*' = ''
+        ),
+        ''
+      )
     cat('Original filename: ', o_basename, '\n')
     cat('Alternative title: ', o_title_sane, '\n')
-    decision <- readline('Change to alternative title? (y/N): ')
+    decision <-
+      readline('Change to alternative title? (y[es]/[n]o/[c]hange): ')
     if (decision %in% 'y') {
       # TODO truncate if too long
       o_newname <-
         file.path(o_dirname,
                   paste0(o_title_sane, tag, '.pdf', collapse = NULL))
       file.rename(o, o_newname)
-      cat('File renamed to: ', o_newname, '\n')
-      cat('\n')
-    } else {
-      cat('File name not changed\n')
-      cat('\n')
+      cat('File renamed to: ', o_newname, '\n\n')
+    } else if (decision %in% c('n', '')) {
+      cat('File name not changed\n\n')
+    } else if (decision %in% c('c')) {
+      cat('First 500 words of document:\n')
+      cat(stringr::word(raw_text_sane, 1, 500), '\n')
+      specified_name <- readline('Specify file name: ')
+      if (!specified_name %in% '') { 
+        o_newname <- file.path(o_dirname, paste0(specified_name, tag, '.pdf', collapse = NULL))
+      file.rename(o, o_newname)
+      cat('File renamed to: ', o_newname, '\n\n')
+      } else { 
+        cat('File name not changed\n\n')
+      }
     }
   }
   message('\nFinished\n')
