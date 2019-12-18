@@ -13,12 +13,13 @@
 #' @examples
 #' rename_pdf(tag = '_pdfrn')  # Renames PDF files in current directory, tagging renamed files with "_pdfrn"
 rename_pdf <- function(filepath = rstudioapi::selectDirectory(),
-                       n_words = 20,
+                       n_words_short = 20,
+                       n_words_long = 500,
                        tag = '',
                        exclude = '',
                        opw = '',
                        upw = '',
-                       random = TRUE,
+                       random = FALSE,
                        pattern = '\\.pdf$|\\.PDF$') {
   # Function to remove punctuation, newlines, trailing whitespace
   sanitise_filename <- function(x) {
@@ -46,9 +47,9 @@ rename_pdf <- function(filepath = rstudioapi::selectDirectory(),
       paste0(pdftools::pdf_text(o, opw, upw), collapse = ' ')
     raw_text_sane <- sanitise_filename(raw_text)
     if (is.null(o_title)) {
-      o_title_sane <- stringr::word(raw_text_sane, 1, n_words)
+      o_title_sane <- stringr::word(raw_text_sane, 1, n_words_short)
     } else if (o_title %in% '') {
-      o_title_sane <- stringr::word(raw_text_sane, 1, n_words)
+      o_title_sane <- stringr::word(raw_text_sane, 1, n_words_short)
     } else {
       o_title_sane <- sanitise_filename(o_title)
     }
@@ -71,7 +72,7 @@ rename_pdf <- function(filepath = rstudioapi::selectDirectory(),
     cat('Original filename: ', o_basename, '\n')
     cat('Alternative title: ', o_title_sane, '\n')
     decision <-
-      readline('Change to alternative title? (y[es]/[n]o/[c]hange): ')
+      readline('Change to alternative title? (y[es]/[n]o/[c]hange manually): ')
     if (decision %in% 'y') {
       # TODO truncate if too long
       o_newname <-
@@ -82,8 +83,8 @@ rename_pdf <- function(filepath = rstudioapi::selectDirectory(),
     } else if (decision %in% c('n', '')) {
       cat('File name not changed\n\n')
     } else if (decision %in% c('c')) {
-      cat('First 500 words of document:\n')
-      cat(stringr::word(raw_text_sane, 1, 500), '\n')
+      cat('First ', n_words_long, ' words of document:\n')
+      cat(stringr::word(raw_text_sane, 1, n_words_long), '\n')
       specified_name <- readline('Specify file name: ')
       if (!specified_name %in% '') { 
         o_newname <- file.path(o_dirname, paste0(specified_name, tag, '.pdf', collapse = NULL))
